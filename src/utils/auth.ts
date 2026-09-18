@@ -1,5 +1,6 @@
 import { UserAccount, UserRole } from '../types';
 import { syncAccountToSupabase } from './supabaseSync';
+import { getSupabase } from './supabase';
 
 const ACCOUNTS_STORAGE_KEY = 'thcs_accounts_v1';
 const CURRENT_USER_KEY = 'thcs_current_user_v1';
@@ -101,7 +102,7 @@ export function setCurrentUser(user: UserAccount | null, rememberMe: boolean = t
   }
 }
 
-// Login verification
+// Login verification (sync version)
 export function authenticateUser(
   usernameOrEmail: string,
   passwordInput: string
@@ -145,6 +146,78 @@ export function authenticateUser(
     user: updatedUser,
     message: 'Đăng nhập thành công!',
   };
+}
+
+// Login verification with Supabase Cloud fallback
+export async function authenticateUserAsync(
+  usernameOrEmail: string,
+  passwordInput: string
+): Promise<{ success: boolean; user?: UserAccount; message: string }> {
+  // First, try local accounts
+  const localRes = authenticateUser(usernameOrEmail, passwordInput);
+  if (localRes.success) {
+    return localRes;
+  }
+
+  // If local account not found, check Supabase cloud directly
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const cleanInput = usernameOrEmail.trim().toLowerCase();
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .or(`username.ilike.${cleanInput},email.ilike.${cleanInput}`)
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        const cloudAcc = data[0];
+        if (cloudAcc.password !== passwordInput) {
+          return {
+            success: false,
+            message: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!',
+          };
+        }
+
+        const user: UserAccount = {
+          id: cloudAcc.id,
+          username: cloudAcc.username,
+          fullName: cloudAcc.full_name,
+          email: cloudAcc.email || `${cloudAcc.username}@thcs.edu.vn`,
+          phone: cloudAcc.phone || undefined,
+          password: cloudAcc.password,
+          role: cloudAcc.role,
+          roleTitle: cloudAcc.role_title,
+          subject: cloudAcc.subject || undefined,
+          assignedClass: cloudAcc.assigned_class || undefined,
+          createdAt: cloudAcc.created_at,
+          lastLogin: new Date().toISOString(),
+        };
+
+        // Save into local accounts cache
+        const accounts = getStoredAccounts();
+        const existingIdx = accounts.findIndex((a) => a.id === user.id);
+        let updatedAccounts = [...accounts];
+        if (existingIdx >= 0) {
+          updatedAccounts[existingIdx] = user;
+        } else {
+          updatedAccounts.push(user);
+        }
+        saveAccounts(updatedAccounts);
+        syncAccountToSupabase(user);
+
+        return {
+          success: true,
+          user,
+          message: 'Đăng nhập từ Supabase Cloud thành công!',
+        };
+      }
+    } catch (err) {
+      console.warn('Supabase auth cloud lookup error:', err);
+    }
+  }
+
+  return localRes;
 }
 
 // Register new account

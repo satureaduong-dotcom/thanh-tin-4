@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserAccount, UserRole, ClassItem, SubjectItem } from '../types';
-import { authenticateUser, registerUser, resetPassword } from '../utils/auth';
+import { authenticateUser, authenticateUserAsync, registerUser, resetPassword } from '../utils/auth';
 import {
   School,
   Lock,
@@ -59,7 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   // ==========================================
   // LOGIN LOGIC
   // ==========================================
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
 
@@ -75,8 +75,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     setLoginLoading(true);
 
-    setTimeout(() => {
-      const res = authenticateUser(loginUsername, loginPassword);
+    try {
+      const res = await authenticateUserAsync(loginUsername, loginPassword);
       setLoginLoading(false);
 
       if (res.success && res.user) {
@@ -84,7 +84,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       } else {
         setLoginError(res.message);
       }
-    }, 200);
+    } catch (err: any) {
+      setLoginLoading(false);
+      setLoginError('Lỗi đăng nhập: ' + (err?.message || 'Vui lòng thử lại'));
+    }
   };
 
   // ==========================================
