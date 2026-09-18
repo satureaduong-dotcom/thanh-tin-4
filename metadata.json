@@ -1,0 +1,6 @@
+{
+  "name": "Trường THCS Lê Lợi",
+  "description": "Hệ thống quản lý lớp học, học sinh, môn học và giáo án bài học trường THCS Lê Lợi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
