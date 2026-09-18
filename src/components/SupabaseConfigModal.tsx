@@ -13,6 +13,7 @@ import {
   Terminal,
   ExternalLink,
   X,
+  Triangle,
 } from 'lucide-react';
 import {
   getSupabaseConfig,
@@ -310,6 +311,32 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
                 {SUPABASE_SQL_SETUP_SCRIPT}
               </pre>
             )}
+          </div>
+
+          {/* Vercel Deployment & Environment Integration Guide */}
+          <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-white text-black flex items-center justify-center font-bold">
+                <Triangle className="w-3 h-3 fill-black text-black" />
+              </div>
+              <span className="font-bold text-white text-xs">Kết nối dự án Vercel với Supabase</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Khi triển khai ứng dụng lên <strong>Vercel</strong>, anh chỉ cần thêm 2 biến môi trường sau trong phần <strong>Project Settings &gt; Environment Variables</strong> của Vercel:
+            </p>
+            <div className="space-y-1.5 font-mono text-[11px] bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+              <div className="flex justify-between items-center text-sky-400">
+                <span>VITE_SUPABASE_URL</span>
+                <span className="text-slate-400 text-[10px] truncate max-w-[260px]">https://vrbhoishctpxzkndgjiz.supabase.co</span>
+              </div>
+              <div className="flex justify-between items-center text-teal-400">
+                <span>VITE_SUPABASE_ANON_KEY</span>
+                <span className="text-slate-400 text-[10px] truncate max-w-[260px]">sb_publishable_U698CDnMn6MVrYjCSJkcjw_q3p1Hg--</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              Đã cấu hình sẵn tập tin <code className="text-emerald-400">vercel.json</code> hỗ trợ SPA routing, đảm bảo không bị lỗi 404 khi người dùng tải lại trang.
+            </p>
           </div>
         </div>
 
